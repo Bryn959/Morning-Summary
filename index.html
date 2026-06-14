@@ -432,8 +432,9 @@ function generateTheme(){
 
 async function summariseNewsWithAI(items){
   const key=localStorage.getItem('sl_apikey');
-  if(!key||!items.length)return null;
+  if(!key||!items.length){console.log('No API key or no items');return null;}
   const headlines=items.slice(0,8).map(n=>`[${CAT_LBL[n.cat]||'Tech'}] ${n.title}`).join('\n');
+  console.log('Calling Anthropic API with',items.length,'headlines');
   try{
     const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
@@ -441,40 +442,64 @@ async function summariseNewsWithAI(items){
         messages:[{role:'user',content:`You are briefing a Head of IT Service Delivery. Summarise these IT news headlines into 4-5 bullet points (2 sentences each). Focus on what matters for IT leadership, service delivery, cybersecurity and AI. Be concise and practical.\n\nHeadlines:\n${headlines}\n\nFormat each bullet as: • [Category] Summary sentence. Why it matters sentence.`}]})
     });
     const d=await r.json();
-    if(d.content&&d.content[0])return d.content[0].text;
-  }catch(e){console.error('AI summary error:',e);}
+    console.log('Anthropic response status:',r.status,d.type||'');
+    if(d.error){console.error('Anthropic error:',d.error.type,d.error.message);return null;}
+    if(d.content&&d.content[0]){console.log('AI summary received OK');return d.content[0].text;}
+  }catch(e){console.error('AI summary fetch error:',e);}
   return null;
 }
 
 const FEEDS=['https://feeds.arstechnica.com/arstechnica/index','https://techcrunch.com/feed','https://www.darkreading.com/rss.xml','https://www.theregister.com/headlines.atom'];
 
 function parseXMLFeed(xml){
-  const parser=new DOMParser();
-  const doc=parser.parseFromString(xml,'text/xml');
-  const isAtom=doc.querySelector('feed')!==null;
-  const items=isAtom?[...doc.querySelectorAll('entry')]:[...doc.querySelectorAll('item')];
-  return items.slice(0,8).map(item=>{
-    const title=(item.querySelector('title')||{}).textContent||'';
-    const link=isAtom?(item.querySelector('link')||{}).getAttribute('href')||(item.querySelector('link')||{}).textContent:'';
-    const linkEl=!isAtom?item.querySelector('link'):null;
-    const finalLink=link||(linkEl?linkEl.textContent:'')||'#';
-    const desc=(item.querySelector('description')||item.querySelector('summary')||item.querySelector('content')||{}).textContent||'';
-    const clean=desc.replace(/<[^>]+>/g,'').slice(0,180).trim();
-    return{title:title.trim(),link:finalLink.trim(),summary:clean+'...',cat:cat(title,desc)};
-  }).filter(i=>i.title.length>2);
+  try{
+    const parser=new DOMParser();
+    const doc=parser.parseFromString(xml,'text/xml');
+    const isAtom=!!doc.querySelector('feed');
+    const items=[...doc.querySelectorAll(isAtom?'entry':'item')];
+    return items.slice(0,8).map(item=>{
+      const title=(item.querySelector('title')||{}).textContent||'';
+      const linkEl=item.querySelector('link');
+      const link=isAtom?(linkEl?.getAttribute('href')||linkEl?.textContent||''):(linkEl?.textContent||'');
+      const desc=(item.querySelector('description')||item.querySelector('summary')||item.querySelector('content')||{}).textContent||'';
+      const clean=desc.replace(/<[^>]+>/g,'').replace(/&[a-z]+;/gi,' ').slice(0,180).trim();
+      return{title:title.trim(),link:link.trim()||'#',summary:clean+'...',cat:cat(title,desc)};
+    }).filter(i=>i.title.length>3);
+  }catch(e){console.error('XML parse error:',e);return[];}
+}
+
+async function fetchWithProxy(proxy,url){
+  const r=await fetch(proxy+encodeURIComponent(url),{signal:AbortSignal.timeout(8000)});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return r;
 }
 
 async function fetchFeed(url){
-  try{
-    const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const r=await fetch(proxy);
-    const d=await r.json();
-    if(!d.contents)return[];
-    return parseXMLFeed(d.contents);
-  }catch(e){
-    console.log('Feed failed:',url,e);
-    return[];
+  const proxies=[
+    u=>`https://api.allorigins.win/get?url=${u}`,
+    u=>`https://corsproxy.io/?${u}`,
+    u=>`https://api.codetabs.com/v1/proxy?quest=${u}`,
+  ];
+  for(const makeProxy of proxies){
+    try{
+      const proxyUrl=makeProxy(encodeURIComponent(url));
+      const r=await fetch(proxyUrl,{signal:AbortSignal.timeout(8000)});
+      if(!r.ok)continue;
+      let xml='';
+      const ct=r.headers.get('content-type')||'';
+      if(ct.includes('json')){
+        const d=await r.json();
+        xml=d.contents||d.data||'';
+      } else {
+        xml=await r.text();
+      }
+      if(!xml||xml.length<100)continue;
+      const items=parseXMLFeed(xml);
+      if(items.length>0){console.log('Feed OK via proxy:',proxyUrl.slice(0,40),items.length,'items');return items;}
+    }catch(e){console.log('Proxy failed, trying next...',e.message);}
   }
+  console.error('All proxies failed for:',url);
+  return[];
 }
 
 async function loadNews(){
@@ -486,31 +511,50 @@ async function loadNews(){
     if(!allNews.length){document.getElementById('news-items').innerHTML='<div class="news-loading">Could not load news feeds right now. Tap &#8635; to retry.</div>';document.getElementById('news-updated').textContent='Retry ↻';return;}
     const seen=new Set();allNews=allNews.filter(n=>{if(seen.has(n.title))return false;seen.add(n.title);return true;}).slice(0,30);
     document.getElementById('news-updated').textContent='Updated '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    renderNews();
-  }catch{document.getElementById('news-items').innerHTML='<div class="news-loading">News feeds unavailable. Try refreshing.</div>';document.getElementById('news-updated').textContent='Error';}
+    await renderNews();
+  }catch(e){
+    console.error('loadNews error:',e);
+    document.getElementById('news-items').innerHTML='<div class="news-loading">News feeds unavailable. Tap &#8635; to retry.</div>';
+    document.getElementById('news-updated').textContent='Error';
+  }
+}
+
+function showRawNews(items){
+  document.getElementById('news-items').innerHTML=items.slice(0,6).map(n=>`<div class="news-item"><div class="news-item-tag">${CAT_LBL[n.cat]||'General Tech'}</div><div class="news-item-title"><a href="${n.link}" target="_blank">${n.title}</a></div><div class="news-item-summary">${n.summary}</div></div>`).join('');
 }
 
 async function renderNews(){
   const f=currentTab==='all'?allNews:allNews.filter(n=>n.cat===currentTab);
-  if(!f.length){document.getElementById('news-items').innerHTML='<div class="news-loading">No articles in this category right now.</div>';return;}
+  if(!f.length){
+    document.getElementById('news-items').innerHTML='<div class="news-loading">No articles in this category right now. Tap &#8635; to refresh.</div>';
+    return;
+  }
+  showRawNews(f);
   const key=localStorage.getItem('sl_apikey');
   if(key&&currentTab==='all'){
-    document.getElementById('news-items').innerHTML='<div class="news-loading">AI is summarising the latest news for you...</div>';
-    const aiSummary=await summariseNewsWithAI(f);
-    if(aiSummary){
-      const bullets=aiSummary.split('\n').filter(l=>l.trim().startsWith('•')||l.trim().startsWith('-'));
-      const html=bullets.map(b=>{
-        const clean=b.replace(/^[•\-\s]+/,'');
-        const catMatch=clean.match(/^\[([^\]]+)\]/);
-        const cat=catMatch?catMatch[1]:'';
-        const text=catMatch?clean.slice(catMatch[0].length).trim():clean;
-        return `<div class="news-item"><div class="news-item-tag">${cat}</div><div class="news-item-summary" style="color:var(--text)">${text}</div></div>`;
-      }).join('');
-      document.getElementById('news-items').innerHTML=html||f.slice(0,6).map(n=>`<div class="news-item"><div class="news-item-tag">${CAT_LBL[n.cat]||'General Tech'}</div><div class="news-item-title"><a href="${n.link}" target="_blank">${n.title}</a></div><div class="news-item-summary">${n.summary}</div></div>`).join('');
-      return;
+    document.getElementById('news-updated').textContent='AI summarising...';
+    try{
+      const aiSummary=await summariseNewsWithAI(f);
+      if(aiSummary&&aiSummary.length>20){
+        const lines=aiSummary.split('\n').filter(l=>l.trim().length>5);
+        const html=lines.map(b=>{
+          const clean=b.replace(/^[•\-\*\d\.\)\s]+/,'').trim();
+          if(!clean)return'';
+          const catMatch=clean.match(/^\[([^\]]+)\]/);
+          const cat=catMatch?catMatch[1]:'IT';
+          const text=catMatch?clean.slice(catMatch[0].length).trim():clean;
+          return`<div class="news-item"><div class="news-item-tag">${cat}</div><div class="news-item-summary" style="color:var(--text);font-size:13px">${text}</div></div>`;
+        }).filter(Boolean).join('');
+        if(html) document.getElementById('news-items').innerHTML=html;
+        document.getElementById('news-updated').textContent='AI summary ✓ '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      } else {
+        document.getElementById('news-updated').textContent='Updated '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      }
+    }catch(e){
+      console.error('AI render error:',e);
+      document.getElementById('news-updated').textContent='Updated '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     }
   }
-  document.getElementById('news-items').innerHTML=f.slice(0,6).map(n=>`<div class="news-item"><div class="news-item-tag">${CAT_LBL[n.cat]||'General Tech'}</div><div class="news-item-title"><a href="${n.link}" target="_blank">${n.title}</a></div><div class="news-item-summary">${n.summary}</div></div>`).join('');
 }
 
 function switchTab(tab,btn){currentTab=tab;document.querySelectorAll('.news-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderNews();}
@@ -530,11 +574,7 @@ function renderAPM(){
 
 async function loadAPMNews(){
   try{
-    const proxy='https://api.allorigins.win/get?url='+encodeURIComponent('https://www.apm.org.uk/blog/feed/');
-    const r=await fetch(proxy);
-    const d=await r.json();
-    if(!d.contents)throw 0;
-    const items=parseXMLFeed(d.contents);
+    const items=await fetchFeed('https://www.apm.org.uk/blog/feed/');
     if(!items.length)throw 0;
     document.getElementById('apm-news-items').innerHTML=items.slice(0,3).map(i=>`<div class="apm-news-item"><a href="${i.link}" target="_blank">${i.title}</a></div>`).join('');
   }catch{document.getElementById('apm-news-items').innerHTML='<div class="apm-news-item" style="color:var(--text-dim)">APM news unavailable right now.</div>';}
