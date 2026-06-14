@@ -448,10 +448,33 @@ async function summariseNewsWithAI(items){
 
 const FEEDS=['https://feeds.arstechnica.com/arstechnica/index','https://techcrunch.com/feed','https://www.darkreading.com/rss.xml','https://www.theregister.com/headlines.atom'];
 
+function parseXMLFeed(xml){
+  const parser=new DOMParser();
+  const doc=parser.parseFromString(xml,'text/xml');
+  const isAtom=doc.querySelector('feed')!==null;
+  const items=isAtom?[...doc.querySelectorAll('entry')]:[...doc.querySelectorAll('item')];
+  return items.slice(0,8).map(item=>{
+    const title=(item.querySelector('title')||{}).textContent||'';
+    const link=isAtom?(item.querySelector('link')||{}).getAttribute('href')||(item.querySelector('link')||{}).textContent:'';
+    const linkEl=!isAtom?item.querySelector('link'):null;
+    const finalLink=link||(linkEl?linkEl.textContent:'')||'#';
+    const desc=(item.querySelector('description')||item.querySelector('summary')||item.querySelector('content')||{}).textContent||'';
+    const clean=desc.replace(/<[^>]+>/g,'').slice(0,180).trim();
+    return{title:title.trim(),link:finalLink.trim(),summary:clean+'...',cat:cat(title,desc)};
+  }).filter(i=>i.title.length>2);
+}
+
 async function fetchFeed(url){
-  const r=await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=8`);
-  const d=await r.json();if(d.status!=='ok')return[];
-  return(d.items||[]).map(i=>({title:i.title||'',link:i.link||'#',summary:(i.description||i.content||'').replace(/<[^>]+>/g,'').slice(0,160).trim()+'...',cat:cat(i.title,i.description||'')}));
+  try{
+    const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const r=await fetch(proxy);
+    const d=await r.json();
+    if(!d.contents)return[];
+    return parseXMLFeed(d.contents);
+  }catch(e){
+    console.log('Feed failed:',url,e);
+    return[];
+  }
 }
 
 async function loadNews(){
@@ -460,7 +483,7 @@ async function loadNews(){
   try{
     const res=await Promise.allSettled(FEEDS.map(fetchFeed));
     allNews=[];res.forEach(r=>{if(r.status==='fulfilled')allNews.push(...r.value);});
-    if(!allNews.length){document.getElementById('news-items').innerHTML='<div class="news-loading">Could not load feeds. Check connection and refresh.</div>';document.getElementById('news-updated').textContent='Failed';return;}
+    if(!allNews.length){document.getElementById('news-items').innerHTML='<div class="news-loading">Could not load news feeds right now. Tap &#8635; to retry.</div>';document.getElementById('news-updated').textContent='Retry ↻';return;}
     const seen=new Set();allNews=allNews.filter(n=>{if(seen.has(n.title))return false;seen.add(n.title);return true;}).slice(0,30);
     document.getElementById('news-updated').textContent='Updated '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     renderNews();
@@ -507,9 +530,13 @@ function renderAPM(){
 
 async function loadAPMNews(){
   try{
-    const r=await fetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://www.apm.org.uk/blog/feed/')+'&count=4');
-    const d=await r.json();if(d.status!=='ok'||!d.items)throw 0;
-    document.getElementById('apm-news-items').innerHTML=d.items.slice(0,3).map(i=>`<div class="apm-news-item"><a href="${i.link}" target="_blank">${i.title}</a></div>`).join('');
+    const proxy='https://api.allorigins.win/get?url='+encodeURIComponent('https://www.apm.org.uk/blog/feed/');
+    const r=await fetch(proxy);
+    const d=await r.json();
+    if(!d.contents)throw 0;
+    const items=parseXMLFeed(d.contents);
+    if(!items.length)throw 0;
+    document.getElementById('apm-news-items').innerHTML=items.slice(0,3).map(i=>`<div class="apm-news-item"><a href="${i.link}" target="_blank">${i.title}</a></div>`).join('');
   }catch{document.getElementById('apm-news-items').innerHTML='<div class="apm-news-item" style="color:var(--text-dim)">APM news unavailable right now.</div>';}
 }
 
