@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Superior Life — Morning Briefing</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Barlow+Condensed:wght@700;800&display=swap');
+
+  :root, [data-theme="light"] {
+    --teal: #2ABFBF; --teal-dark: #1a9999; --teal-light: #e8f8f8;
+    --bg: #f5f7fa; --surface: #ffffff; --surface2: #f0f4f8;
+    --text: #0f1923; --text-muted: #4a607a; --text-dim: #8aa0b8;
+    --border: #dde4ea; --border-teal: rgba(42,191,191,0.22);
+    --mission-bg: #0f1923; --shadow: 0 1px 4px rgba(0,0,0,0.07);
+    --radius: 10px; --font-display: 'Barlow Condensed',sans-serif; --font-body: 'Inter',sans-serif;
+  }
+  [data-theme="dark"] {
+    --teal: #2ABFBF; --teal-dark: #1a9999; --teal-light: rgba(42,191,191,0.08);
+    --bg: #0f1923; --surface: #151f2e; --surface2: #1c2a3a;
+    --text: #e8edf2; --text-muted: #7a90a8; --text-dim: #4a6070;
+    --border: rgba(42,191,191,0.14); --border-teal: rgba(42,191,191,0.2);
+    --mission-bg: #1a2535; --shadow: none;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:14px; line-height:1.6; min-height:100vh; transition:background .25s,color .25s; }
+
+  .header { border-bottom:1px solid var(--border); padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:60px; background:var(--surface); position:sticky; top:0; z-index:100; box-shadow:var(--shadow); transition:background .25s,border-color .25s; }
+  .logo { display:flex; align-items:center; gap:10px; }
+  .logo-mark { width:28px; height:28px; }
+  .logo-text { font-family:var(--font-display); font-size:13px; letter-spacing:.18em; color:var(--teal); text-transform:uppercase; font-weight:700; }
+  .header-right { display:flex; align-items:center; gap:10px; }
+  .date-display { font-size:12px; color:var(--text-muted); letter-spacing:.03em; }
+  .greeting { font-size:13px; font-weight:500; color:var(--teal); }
+
+  .btn-icon { background:none; border:1px solid var(--border); color:var(--text-muted); width:32px; height:32px; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px; transition:all .2s; flex-shrink:0; }
+  .btn-icon:hover { border-color:var(--teal); color:var(--teal); }
+
+  .theme-toggle { display:flex; align-items:center; gap:5px; background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:4px 12px; cursor:pointer; font-size:11px; font-weight:600; letter-spacing:.06em; color:var(--text-muted); transition:all .2s; white-space:nowrap; }
+  .theme-toggle:hover { border-color:var(--teal); color:var(--teal); }
+
+  .mission-bar { background:var(--mission-bg); border-bottom:1px solid rgba(255,255,255,.05); padding:9px 2rem; display:flex; align-items:center; justify-content:space-between; gap:2rem; transition:background .25s; }
+  .mission-text { font-size:11px; color:#4a6070; letter-spacing:.08em; text-transform:uppercase; }
+  .mission-text span { color:var(--teal); font-style:italic; text-transform:none; letter-spacing:0; }
+  .values-row { display:flex; gap:18px; }
+  .value-pill { font-size:10px; color:var(--teal); letter-spacing:.12em; text-transform:uppercase; font-weight:600; opacity:.65; }
+
+  .main { padding:1.5rem 2rem; max-width:1400px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+
+  .section-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); transition:background .25s,border-color .25s; }
+  .section-header { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem .75rem; border-bottom:1px solid var(--border); transition:border-color .25s; }
+  .section-label { display:flex; align-items:center; gap:8px; }
+  .section-icon { font-size:15px; color:var(--teal); }
+  .section-title { font-family:var(--font-display); font-size:15px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text); }
+  .section-meta { font-size:10px; color:var(--text-dim); letter-spacing:.08em; text-transform:uppercase; }
+  .section-body { padding:1.25rem; }
+
+  .quote-text { font-family:var(--font-display); font-size:26px; font-weight:700; line-height:1.25; color:var(--text); margin-bottom:.75rem; }
+  .quote-text .accent { color:var(--teal); }
+  .quote-author { font-size:11px; color:var(--teal); letter-spacing:.12em; text-transform:uppercase; font-weight:600; margin-bottom:1rem; }
+  .quote-reflection { font-size:12px; color:var(--text-muted); font-style:italic; padding-top:.75rem; border-top:1px solid var(--border); }
+
+  .task-list { list-style:none; display:flex; flex-direction:column; gap:8px; margin-bottom:1rem; }
+  .task-item { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; background:var(--surface2); border-radius:8px; border:1px solid var(--border); transition:border-color .2s,background .25s; }
+  .task-item:hover { border-color:var(--teal); }
+  .task-item.done { opacity:.4; }
+  .task-item.done .task-text { text-decoration:line-through; }
+  .task-check { width:16px; height:16px; border:1.5px solid var(--teal); border-radius:4px; flex-shrink:0; cursor:pointer; margin-top:1px; display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--teal); transition:background .15s; }
+  .task-item.done .task-check { background:var(--teal); color:#fff; }
+  .task-content { flex:1; min-width:0; }
+  .task-text { font-size:13px; color:var(--text); line-height:1.4; }
+  .priority-badge { font-size:9px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; padding:2px 7px; border-radius:4px; margin-top:3px; display:inline-block; }
+  .p-high { background:rgba(200,50,50,.1); color:#b83030; }
+  .p-med  { background:rgba(170,110,10,.1); color:#a07010; }
+  .p-low  { background:rgba(42,191,191,.1); color:var(--teal); }
+  [data-theme="dark"] .p-high { color:#e07070; }
+  [data-theme="dark"] .p-med  { color:#c8a040; }
+  .task-delete { background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:14px; padding:0 2px; flex-shrink:0; line-height:1; margin-top:1px; }
+  .task-delete:hover { color:#c04040; }
+
+  .task-input-row { display:flex; gap:8px; margin-bottom:8px; }
+  .task-input { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:8px 12px; color:var(--text); font-family:var(--font-body); font-size:13px; outline:none; transition:background .25s,border-color .2s; }
+  .task-input:focus { border-color:var(--teal); }
+  .task-input::placeholder { color:var(--text-dim); }
+  .priority-select { background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:8px 8px; color:var(--text-muted); font-family:var(--font-body); font-size:12px; outline:none; cursor:pointer; width:76px; transition:background .25s; }
+  .priority-select:focus { border-color:var(--teal); }
+  .btn-add { background:var(--teal); border:none; border-radius:7px; padding:8px 14px; color:#fff; font-family:var(--font-body); font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; transition:background .2s; }
+  .btn-add:hover { background:var(--teal-dark); }
+
+  .theme-box { padding:10px 12px; background:var(--teal-light); border:1px solid var(--border-teal); border-radius:8px; font-size:12px; color:var(--teal-dark); font-style:italic; margin-top:10px; transition:background .25s; }
+  [data-theme="dark"] .theme-box { color:var(--teal); }
+
+  .planner-section { border-top:1px solid var(--border); padding-top:12px; margin-top:12px; }
+  .planner-label { font-size:10px; color:var(--text-dim); letter-spacing:.1em; text-transform:uppercase; margin-bottom:6px; }
+  .planner-paste { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:8px 10px; color:var(--text); font-family:var(--font-body); font-size:12px; outline:none; resize:vertical; min-height:60px; transition:background .25s; }
+  .planner-paste:focus { border-color:var(--teal); }
+  .planner-paste::placeholder { color:var(--text-dim); }
+  .btn-import { margin-top:6px; width:100%; background:none; border:1px solid var(--teal); border-radius:7px; padding:7px; color:var(--teal); font-size:12px; font-weight:600; cursor:pointer; transition:all .2s; }
+  .btn-import:hover { background:var(--teal); color:#fff; }
+
+  .news-tabs { display:flex; gap:4px; margin-bottom:1rem; flex-wrap:wrap; }
+  .news-tab { font-size:10px; letter-spacing:.08em; text-transform:uppercase; font-weight:600; padding:4px 10px; border-radius:5px; cursor:pointer; border:1px solid var(--border); color:var(--text-dim); background:none; transition:all .2s; }
+  .news-tab.active,.news-tab:hover { background:var(--teal); color:#fff; border-color:var(--teal); }
+  .news-items { display:flex; flex-direction:column; gap:10px; }
+  .news-item { padding:10px 12px; background:var(--surface2); border-radius:8px; border-left:2px solid var(--teal); transition:background .25s; }
+  .news-item-title { font-size:13px; font-weight:500; color:var(--text); margin-bottom:3px; line-height:1.35; }
+  .news-item-title a { color:inherit; text-decoration:none; }
+  .news-item-title a:hover { color:var(--teal); }
+  .news-item-summary { font-size:12px; color:var(--text-muted); line-height:1.5; }
+  .news-item-tag { font-size:9px; color:var(--teal); letter-spacing:.1em; text-transform:uppercase; font-weight:600; margin-bottom:4px; }
+  .news-loading { color:var(--text-dim); font-size:12px; padding:1rem 0; text-align:center; }
+
+  .apm-facts { display:flex; flex-direction:column; gap:12px; margin-bottom:1rem; }
+  .apm-fact { padding:12px; background:var(--surface2); border-radius:8px; border-top:2px solid var(--teal); transition:background .25s; }
+  .apm-fact-title { font-size:12px; font-weight:600; color:var(--teal); letter-spacing:.06em; text-transform:uppercase; margin-bottom:5px; }
+  .apm-fact-body { font-size:12px; color:var(--text-muted); line-height:1.55; }
+  .apm-news { border-top:1px solid var(--border); padding-top:1rem; margin-top:.5rem; }
+  .apm-news-label { font-size:10px; color:var(--text-dim); letter-spacing:.1em; text-transform:uppercase; margin-bottom:8px; }
+  .apm-news-item { font-size:12px; color:var(--text-muted); padding:6px 0; border-bottom:1px solid var(--border); line-height:1.4; }
+  .apm-news-item:last-child { border-bottom:none; }
+  .apm-news-item a { color:var(--teal); text-decoration:none; }
+  .apm-news-item a:hover { text-decoration:underline; }
+
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.5rem; width:440px; max-width:95vw; box-shadow:0 8px 40px rgba(0,0,0,.15); transition:background .25s; }
+  .modal-title { font-family:var(--font-display); font-size:18px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--teal); margin-bottom:1rem; }
+  .modal label { display:block; font-size:11px; color:var(--text-muted); letter-spacing:.08em; text-transform:uppercase; margin-bottom:5px; margin-top:14px; }
+  .modal input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:9px 12px; color:var(--text); font-family:var(--font-body); font-size:13px; outline:none; transition:background .25s; }
+  .modal input:focus { border-color:var(--teal); }
+  .modal-note { font-size:11px; color:var(--text-dim); margin-top:6px; line-height:1.5; }
+  .modal-buttons { display:flex; gap:10px; margin-top:1.25rem; }
+  .btn-save { flex:1; background:var(--teal); border:none; border-radius:7px; padding:9px; color:#fff; font-weight:600; font-size:13px; cursor:pointer; transition:background .2s; }
+  .btn-save:hover { background:var(--teal-dark); }
+  .btn-cancel { flex:1; background:none; border:1px solid var(--border); border-radius:7px; padding:9px; color:var(--text-muted); font-size:13px; cursor:pointer; }
+  .btn-cancel:hover { border-color:var(--text-muted); }
+
+  @media(max-width:900px) { .main{grid-template-columns:1fr;} .mission-bar{flex-direction:column;align-items:flex-start;gap:8px;} }
+  @media(max-width:600px) { .header{padding:0 1rem;} .main{padding:1rem;} .values-row{display:none;} .date-display{display:none;} #theme-lbl{display:none;} }
+  .spin { animation:spin 1s linear infinite; display:inline-block; }
+  @keyframes spin { to{transform:rotate(360deg);} }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <svg class="logo-mark" viewBox="0 0 28 28" fill="none">
+      <path d="M14 3L20 10H14L20 17H14L20 24" stroke="#2ABFBF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M14 3L8 10H14L8 17H14L8 24" stroke="#2ABFBF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
+    </svg>
+    <span class="logo-text">Superior Life</span>
+  </div>
+  <div class="header-right">
+    <span class="date-display" id="date-display"></span>
+    <span class="greeting" id="greeting"></span>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark">
+      <span id="theme-icon">&#9790;</span>
+      <span id="theme-lbl">Dark</span>
+    </button>
+    <button class="btn-icon" onclick="refreshAll()" title="Refresh" id="refresh-btn">&#8635;</button>
+    <button class="btn-icon" onclick="openSettings()" title="Settings">&#9881;</button>
+  </div>
+</header>
+
+<div class="mission-bar">
+  <div class="mission-text">My mission &mdash; To become <span>superior</span> through daily improvement, consistency, and mindset. While bringing energy, enjoyment, and value to others.</div>
+  <div class="values-row">
+    <span class="value-pill">Enjoy life.</span>
+    <span class="value-pill">Understand others.</span>
+    <span class="value-pill">Bring energy.</span>
+    <span class="value-pill">Make an impact.</span>
+  </div>
+</div>
+
+<main class="main">
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-label"><span class="section-icon">&#10022;</span><span class="section-title">Daily Mindset</span></div>
+      <span class="section-meta" id="quote-day">Day 1</span>
+    </div>
+    <div class="section-body">
+      <div class="quote-text" id="quote-text">Loading...</div>
+      <div class="quote-author" id="quote-author"></div>
+      <div class="quote-reflection" id="quote-reflection"></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-label"><span class="section-icon">&#9678;</span><span class="section-title">Today's Focus</span></div>
+      <span class="section-meta" id="task-count">0 tasks</span>
+    </div>
+    <div class="section-body">
+      <ul class="task-list" id="task-list"></ul>
+      <div class="task-input-row">
+        <input class="task-input" id="task-input" type="text" placeholder="Add a task for today..." onkeydown="if(event.key==='Enter')addTask()">
+        <select class="priority-select" id="priority-select">
+          <option value="high">High</option>
+          <option value="med" selected>Med</option>
+          <option value="low">Low</option>
+        </select>
+        <button class="btn-add" onclick="addTask()">+ Add</button>
+      </div>
+      <div class="planner-section">
+        <div class="planner-label">Import from Microsoft To Do</div>
+        <div style="font-size:11px;color:var(--text-muted);padding:4px 0 8px;">In To Do, select your tasks (Ctrl+A), copy (Ctrl+C), paste below and click Import.</div>
+        <textarea class="planner-paste" id="planner-paste" placeholder="Paste tasks from Microsoft To Do here..."></textarea>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+          <button class="btn-import" onclick="importPasted()" style="flex:1">Import tasks</button>
+          <button class="btn-import" onclick="clearDone()" style="flex:1;border-color:var(--border);color:var(--text-dim)">Clear completed</button>
+        </div>
+      </div>
+      <div class="theme-box" id="theme-box">Add your tasks above &mdash; your day's theme will appear here.</div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-label"><span class="section-icon">&#10792;</span><span class="section-title">IT Industry Digest</span></div>
+      <span class="section-meta" id="news-updated">Fetching...</span>
+    </div>
+    <div class="section-body">
+      <div class="news-tabs">
+        <button class="news-tab active" onclick="switchTab('all',this)">All</button>
+        <button class="news-tab" onclick="switchTab('ai',this)">AI</button>
+        <button class="news-tab" onclick="switchTab('cyber',this)">Cyber</button>
+        <button class="news-tab" onclick="switchTab('itsm',this)">Service Delivery</button>
+        <button class="news-tab" onclick="switchTab('mgmt',this)">IT Mgmt</button>
+        <button class="news-tab" onclick="switchTab('tech',this)">General Tech</button>
+      </div>
+      <div class="news-items" id="news-items"><div class="news-loading"><span class="spin">&#8635;</span> Fetching latest IT news...</div></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-label"><span class="section-icon">&#9671;</span><span class="section-title">APM Knowledge</span></div>
+      <span class="section-meta" id="apm-day-label">Daily refresh</span>
+    </div>
+    <div class="section-body">
+      <div class="apm-facts" id="apm-facts">Loading APM facts...</div>
+      <div class="apm-news">
+        <div class="apm-news-label">Latest from APM.org.uk</div>
+        <div id="apm-news-items"><div class="news-loading">Fetching APM news...</div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-title">Settings</div>
+    <label>Your name</label>
+    <input type="text" id="name-input" placeholder="e.g. Jordon">
+    <label>JSONBin Master Key — enables task sync</label>
+    <input type="password" id="bin-key-input" placeholder="$2a$10$...">
+    <div class="modal-note">Paste your JSONBin Master Key here. Tasks will then sync across all your devices automatically via JSONBin.</div>
+    <label>Anthropic API Key (optional)</label>
+    <input type="password" id="api-key-input" placeholder="sk-ant-...">
+    <div class="modal-note">Optional. Enables the AI-generated day theme. Get one at console.anthropic.com.</div>
+    <div class="modal-buttons">
+      <button class="btn-save" onclick="saveSettings()">Save</button>
+      <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const QUOTES=[{text:"The secret of getting ahead is getting started.",author:"Mark Twain",reflection:"What one thing can you start today that your future self will thank you for?"},{text:"You don't have to be great to start, but you have to start to be great.",author:"Zig Ziglar",reflection:"What have you been waiting to begin?"},{text:"Believe you can and you're halfway there.",author:"Theodore Roosevelt",reflection:"Where is your belief currently holding you back?"},{text:"It always seems impossible until it's done.",author:"Nelson Mandela",reflection:"What 'impossible' thing are you working towards?"},{text:"Success is not final, failure is not fatal: it is the courage to continue that counts.",author:"Winston Churchill",reflection:"What are you courageous enough to keep going with today?"},{text:"The only way to do great work is to love what you do.",author:"Steve Jobs",reflection:"What part of today's work genuinely excites you?"},{text:"In the middle of every difficulty lies opportunity.",author:"Albert Einstein",reflection:"What challenge in front of you contains a hidden advantage?"},{text:"Our greatest glory is not in never failing, but in rising every time we fall.",author:"Confucius",reflection:"What have you learned from your most recent setback?"},{text:"Do something today that your future self will thank you for.",author:"Sean Patrick Flanery",reflection:"Name one action today that compounds over time."},{text:"Energy and persistence conquer all things.",author:"Benjamin Franklin",reflection:"Where will you direct your best energy today?"},{text:"Push yourself, because no one else is going to do it for you.",author:"Anonymous",reflection:"What standard are you holding yourself to today?"},{text:"Great things never came from comfort zones.",author:"Neil Strauss",reflection:"Where could stepping into discomfort serve you today?"},{text:"Success doesn't just find you. You have to go out and get it.",author:"Anonymous",reflection:"What are you actively pursuing, not just passively waiting for?"},{text:"Don't stop when you're tired. Stop when you're done.",author:"Anonymous",reflection:"What does 'done' look like for your most important goal?"},{text:"Wake up with determination. Go to bed with satisfaction.",author:"Anonymous",reflection:"What one thing, if done today, would give you genuine satisfaction tonight?"},{text:"Little things make big days.",author:"Anonymous",reflection:"What small, deliberate action will you take today?"},{text:"Don't wait for opportunity. Create it.",author:"Anonymous",reflection:"Where can you make something happen rather than waiting?"},{text:"Sometimes we're tested not to show our weaknesses, but to discover our strengths.",author:"Anonymous",reflection:"What strength is today's challenge asking you to use?"},{text:"The key to success is to focus on goals, not obstacles.",author:"Anonymous",reflection:"What obstacle are you giving too much attention to?"},{text:"A year from now you may wish you had started today.",author:"Karen Lamb",reflection:"What will you regret not starting, if not now?"},{text:"Every day is a chance to be better.",author:"Anonymous",reflection:"One specific area: what does 'better' look like today?"},{text:"Strive for progress, not perfection.",author:"Anonymous",reflection:"Where is perfectionism slowing you down?"},{text:"The future depends on what you do today.",author:"Mahatma Gandhi",reflection:"What action today has the longest reach into your future?"},{text:"Act as if what you do makes a difference. It does.",author:"William James",reflection:"Who benefits when you show up at your best today?"},{text:"With the new day comes new strength and new thoughts.",author:"Eleanor Roosevelt",reflection:"What new perspective can you bring to a problem you've been stuck on?"},{text:"You've got this.",author:"Anonymous",reflection:"Say it like you mean it. What are you fully committing to today?"},{text:"Discipline is the bridge between goals and accomplishment.",author:"Jim Rohn",reflection:"What daily discipline is building your biggest goal right now?"},{text:"Be disciplined. Improve daily. Hold a superior standard.",author:"Superior Life",reflection:"What does your superior standard look like in practice today?"},{text:"Motivation gets you going, but discipline keeps you growing.",author:"John C. Maxwell",reflection:"What are you doing today out of discipline, not just motivation?"},{text:"Your attitude determines your direction.",author:"Anonymous",reflection:"What attitude will you choose to lead with this morning?"},{text:"Make each day your masterpiece.",author:"John Wooden",reflection:"What would make today genuinely excellent, not just average?"},{text:"The only limit to our realisation of tomorrow is our doubts of today.",author:"Franklin D. Roosevelt",reflection:"What doubt can you challenge or set aside right now?"},{text:"Don't count the days, make the days count.",author:"Muhammad Ali",reflection:"How will you make today count?"},{text:"Excellence is not a destination; it is a continuous journey that never ends.",author:"Brian Tracy",reflection:"What does the next step of your journey look like today?"},{text:"Tough times never last, but tough people do.",author:"Robert H. Schuller",reflection:"What toughness are you developing right now?"},{text:"There is no substitute for hard work.",author:"Thomas Edison",reflection:"Where do you need to put in the work rather than look for the shortcut?"},{text:"The expert in anything was once a beginner.",author:"Helen Hayes",reflection:"What are you a beginner at right now that you'll one day be expert in?"},{text:"Opportunities don't happen. You create them.",author:"Chris Grosser",reflection:"What opportunity can you create today rather than wait for?"},{text:"Go the extra mile. It's never crowded there.",author:"Wayne Dyer",reflection:"Where can you do slightly more than expected today?"},{text:"Small progress is still progress.",author:"Anonymous",reflection:"What counts as forward movement, even if it's small?"},{text:"Leaders are readers.",author:"Harry S. Truman",reflection:"What are you learning right now that sharpens your edge?"},{text:"Impact is created by consistency, not intensity.",author:"Anonymous",reflection:"What consistent habit is creating the biggest return in your life?"},{text:"Clarity is the antidote to anxiety.",author:"Anonymous",reflection:"What could you make clearer in your mind or plan today?"},{text:"Your daily habits are the architecture of your future self.",author:"Anonymous",reflection:"What habit are you building that your future self will live inside?"},{text:"One day or day one. You decide.",author:"Anonymous",reflection:"What is still 'one day' that should become 'day one' today?"},{text:"Be so good they can't ignore you.",author:"Steve Martin",reflection:"What skill are you developing to become undeniable?"},{text:"Everything you've ever wanted is on the other side of fear.",author:"George Addair",reflection:"What fear stands between you and something you genuinely want?"},{text:"The best investment you can make is in yourself.",author:"Warren Buffett",reflection:"What are you investing in yourself today — time, learning, health?"},{text:"Don't limit your challenges. Challenge your limits.",author:"Anonymous",reflection:"What self-imposed limit are you ready to test today?"},{text:"A smooth sea never made a skilled sailor.",author:"Franklin D. Roosevelt",reflection:"What rough water are you navigating that is building your capability?"},{text:"You miss 100% of the shots you don't take.",author:"Wayne Gretzky",reflection:"What shot are you not taking that you should be?"},{text:"Be the energy you want to attract.",author:"Anonymous",reflection:"What energy are you bringing into your team and environment today?"},{text:"Good things take time. Great things take longer.",author:"Anonymous",reflection:"What are you being patient enough with to let it become great?"},{text:"Keep going. Everything you need will come to you at the perfect time.",author:"Anonymous",reflection:"What are you trusting the process on right now?"},{text:"Earn your confidence; don't assume it.",author:"Anonymous",reflection:"What action today will genuinely build your confidence?"},{text:"An investment in knowledge pays the best interest.",author:"Benjamin Franklin",reflection:"What are you learning this week that will pay dividends?"},{text:"The difference between ordinary and extraordinary is that little extra.",author:"Jimmy Johnson",reflection:"Where can you go just a little further today?"},{text:"You are never too old to set another goal or to dream a new dream.",author:"C.S. Lewis",reflection:"What new goal are you bold enough to set right now?"},{text:"It does not matter how slowly you go as long as you do not stop.",author:"Confucius",reflection:"What are you keeping going with, even on the slow days?"},{text:"Believe in yourself and all that you are.",author:"Christian D. Larson",reflection:"What would change today if you believed in yourself fully?"},{text:"The harder the conflict, the greater the triumph.",author:"Thomas Paine",reflection:"What difficult thing in front of you will make the win sweeter?"}];
+
+const APM_FACTS=[{title:"Project lifecycle",body:"Every project moves through defined phases: conception, definition, delivery, and closure. Understanding which phase you're in helps you apply the right governance, resources, and decision-making authority. Many projects fail not from poor execution but from unclear phase transitions."},{title:"Stakeholder mapping",body:"The power-interest grid classifies stakeholders by their influence over the project and their interest in its outcomes. High power, high interest stakeholders require active management and close engagement. Mapping this at the outset prevents costly surprises later."},{title:"Risk appetite vs risk tolerance",body:"Risk appetite is the level of risk an organisation is willing to accept in pursuit of its objectives. Risk tolerance is the acceptable variation around that threshold. A project manager must understand both before making risk response decisions — they are not the same thing."},{title:"Benefits realisation",body:"Benefits realisation management ensures that the intended outcomes of a project are actually delivered, measured, and sustained after handover. The project manager is responsible for identifying benefits owners and setting up the framework — not just delivering outputs."},{title:"Governance and sponsorship",body:"Effective project governance requires an accountable sponsor who owns the business case and has authority to make decisions at the project board level. Weak sponsorship is one of the most cited causes of project failure in APM research."},{title:"The business case",body:"The business case is a living document, not a one-time justification. It should be revisited at each stage gate to confirm the project remains viable, affordable, and aligned to strategic objectives. If the case no longer stacks up, stopping is a valid decision."},{title:"Communication management",body:"A communication management plan defines who needs what information, in what format, at what frequency, and through which channel. Failing to plan communications leads to stakeholder misalignment, missed escalations, and eroded trust — often more damaging than technical problems."},{title:"Change control",body:"Change control is the formal process for evaluating, approving, and recording any change to agreed project scope, time, cost, or quality. Without it, scope creep erodes baselines and makes progress measurement meaningless. Every change request should go through the process regardless of perceived size."},{title:"Critical path method",body:"The critical path is the longest sequence of dependent activities that determines the minimum project duration. Any delay on the critical path delays the whole project. Identifying it lets you focus management attention where schedule compression actually matters."},{title:"Earned value management",body:"EVM integrates scope, schedule, and cost to give an objective view of project performance. Schedule Performance Index (SPI) and Cost Performance Index (CPI) below 1.0 indicate you are behind or over budget respectively. EVM replaces subjective gut feel with measurable baselines."},{title:"Resource management",body:"Resource management involves identifying, acquiring, developing, and releasing the people, materials, and equipment a project needs. Resource histograms and levelling techniques help balance demand against availability, preventing both overload and underutilisation."},{title:"Quality management",body:"Quality in project management is fitness for purpose — meeting agreed requirements. Quality assurance focuses on the processes used; quality control focuses on the outputs. Building quality in is far cheaper than inspecting defects out at the end."},{title:"Procurement and contracts",body:"The choice of contract type allocates risk between buyer and supplier. Fixed-price contracts transfer risk to the supplier but limit flexibility. Time-and-materials contracts give flexibility but leave cost risk with the buyer. Understanding the trade-off is essential for Head of IT procurement decisions."},{title:"Issue management",body:"An issue is a risk that has materialised. Issues require immediate action rather than monitoring. The issue log should capture: description, owner, impact, date raised, and resolution date. Conflating risks and issues creates confusion and delays response."},{title:"Programme vs project",body:"A project delivers defined outputs within constraints. A programme coordinates a group of related projects to deliver outcomes and benefits that cannot be achieved by managing them independently. As a Head of IT Service Delivery, you likely operate within a programme context rather than as a standalone project."},{title:"Project success criteria",body:"Success criteria should be agreed and documented before a project starts, not defined retrospectively. They should cover: delivery of outputs (did we build it?), outcomes (did it work as intended?), and benefits (did it make the difference promised in the business case?)."},{title:"Assumptions and constraints",body:"Assumptions are things believed to be true but not confirmed. Constraints are imposed limitations. Both must be documented explicitly in the project initiation document. An assumption that proves false is a risk — treat all major assumptions as risks to be monitored."},{title:"Organisational change management",body:"Projects deliver change. Change management addresses the human side: readiness, adoption, and sustainability. Without it, technically successful projects fail to embed. APM considers change management an integral part of benefits realisation, not a separate workstream."},{title:"Agile and waterfall",body:"Waterfall is plan-driven and sequential: suitable when requirements are well-understood and stable. Agile is iterative and adaptive: suited to uncertainty and evolving requirements. Most real projects use a hybrid. Understanding when to apply each is a core practitioner competency."},{title:"Roles: PM, sponsor, and board",body:"The project manager is responsible for day-to-day delivery. The sponsor owns the business case and provides strategic direction. The project board provides governance oversight and escalation resolution. Clarity on these boundaries prevents both vacuum and overlap at critical moments."},{title:"Lessons learned",body:"Lessons learned should be captured throughout the project, not just at closure. They feed into organisational learning and improve future project performance. Without a formal mechanism to capture and act on them, organisations repeat the same mistakes on every project."},{title:"Dependency management",body:"Dependencies between projects in a programme, or between tasks within a project, must be identified and actively managed. Finish-to-start, start-to-start, finish-to-finish — the type of dependency determines how delays cascade. Failing to map interdependencies is a leading cause of schedule overrun."},{title:"Monte Carlo simulation",body:"Monte Carlo simulation applies probability distributions to cost and schedule estimates, running thousands of scenarios to produce a range of likely outcomes. This gives far more decision-useful information than a single-point estimate, particularly for complex IT programmes with significant uncertainty."},{title:"APM competence framework",body:"The APM Competence Framework describes the knowledge, skills, and behaviours expected at different levels of project management practice. For your APM apprenticeship, demonstrating applied competence — not just theoretical knowledge — is what your assessors are looking for."},{title:"Tailoring",body:"No methodology should be applied wholesale. Tailoring means adapting governance, documentation, and process to the size, risk profile, and context of the specific project. Over-engineered governance on a small project is just as damaging as under-governance on a complex one."}];
+
+const CAT_KW={ai:['artificial intelligence','machine learning','ai ','chatgpt','llm','generative','copilot','openai','deepmind','automation','ml ','neural'],cyber:['cyber','security','breach','ransomware','vulnerability','attack','malware','phishing','hack','ciso','infosec','threat','zero-day'],itsm:['service desk','itsm','itil','service delivery','incident','problem management','change management','helpdesk','sla','service management'],mgmt:['it management','cio','cto','it strategy','digital transformation','governance','it leadership','budget','vendor management','outsourcing']};
+function cat(t,s){const tx=(t+' '+s).toLowerCase();for(const[k,v]of Object.entries(CAT_KW))if(v.some(w=>tx.includes(w)))return k;return'tech';}
+const CAT_LBL={ai:'AI',cyber:'Cyber',itsm:'Service Delivery',mgmt:'IT Mgmt',tech:'General Tech'};
+
+let allNews=[],currentTab='all',tasks=[];
+const JSONBIN_URL='https://api.jsonbin.io/v3/b/6a2eacd8f5f4af5e29f04133';
+
+function getBinKey(){return localStorage.getItem('sl_binkey')||'';}
+
+async function loadTasksFromBin(){
+  const key=getBinKey();
+  if(!key){tasks=JSON.parse(localStorage.getItem('sl_tasks')||'[]');renderTasks();return;}
+  try{
+    const r=await fetch(JSONBIN_URL+'/latest',{headers:{'X-Master-Key':key}});
+    const d=await r.json();
+    if(d.record&&d.record.tasks){
+      tasks=d.record.tasks;
+      localStorage.setItem('sl_tasks',JSON.stringify(tasks));
+    } else {
+      tasks=JSON.parse(localStorage.getItem('sl_tasks')||'[]');
+    }
+  }catch{tasks=JSON.parse(localStorage.getItem('sl_tasks')||'[]');}
+  renderTasks();
+}
+
+async function saveTasksToBin(){
+  localStorage.setItem('sl_tasks',JSON.stringify(tasks));
+  const key=getBinKey();
+  if(!key)return;
+  try{
+    await fetch(JSONBIN_URL,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':key,'X-Bin-Versioning':'false'},
+      body:JSON.stringify({tasks})
+    });
+  }catch(e){console.log('Bin sync failed',e);}
+}
+
+function init(){
+  const t=localStorage.getItem('sl_theme')||'light';
+  document.documentElement.setAttribute('data-theme',t);
+  updateToggleUI(t);
+  setDateTime();setQuote();loadTasksFromBin();loadNews();renderAPM();
+  setInterval(setDateTime,60000);
+}
+
+function setDateTime(){
+  const n=new Date(),h=n.getHours(),nm=localStorage.getItem('sl_name')||'';
+  const g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  document.getElementById('greeting').textContent=nm?`${g}, ${nm}.`:g+'.';
+  document.getElementById('date-display').textContent=n.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+
+function updateToggleUI(mode){
+  document.getElementById('theme-icon').textContent=mode==='dark'?'☀':'☽';
+  document.getElementById('theme-lbl').textContent=mode==='dark'?'Light':'Dark';
+}
+
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme');
+  const next=cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  localStorage.setItem('sl_theme',next);
+  updateToggleUI(next);
+}
+
+function setQuote(){
+  const d=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/86400000);
+  const q=QUOTES[d%QUOTES.length];
+  const w=q.text.split(' '),last=w.pop();
+  document.getElementById('quote-text').innerHTML=w.join(' ')+' <span class="accent">'+last+'</span>';
+  document.getElementById('quote-author').textContent='— '+q.author;
+  document.getElementById('quote-reflection').textContent=q.reflection;
+  document.getElementById('quote-day').textContent='Day '+(d%QUOTES.length+1);
+}
+
+function renderTasks(){
+  const list=document.getElementById('task-list');
+  if(tasks.length===0){
+    list.innerHTML='<li style="color:var(--text-dim);font-size:12px;padding:8px 0;">No tasks yet — add above, or paste from Planner below.</li>';
+    document.getElementById('task-count').textContent='0 tasks';
+    document.getElementById('theme-box').textContent="Add your tasks above — your day's theme will appear here.";
+    return;
+  }
+  list.innerHTML='';
+  tasks.forEach((t,i)=>{
+    const li=document.createElement('li');
+    li.className='task-item'+(t.done?' done':'');
+    li.innerHTML=`<div class="task-check" onclick="toggleTask(${i})">${t.done?'✓':''}</div>
+      <div class="task-content"><div class="task-text">${t.text}</div>
+      <span class="priority-badge p-${t.priority}">${t.priority==='high'?'High':t.priority==='med'?'Medium':'Low'}</span></div>
+      <button class="task-delete" onclick="deleteTask(${i})">&#x2715;</button>`;
+    list.appendChild(li);
+  });
+  const done=tasks.filter(t=>t.done).length;
+  document.getElementById('task-count').textContent=`${tasks.length} tasks \u00b7 ${done} done`;
+  generateTheme();
+}
+
+function addTask(){
+  const inp=document.getElementById('task-input'),pri=document.getElementById('priority-select').value,text=inp.value.trim();
+  if(!text)return;tasks.push({text,priority:pri,done:false});saveTasks();inp.value='';renderTasks();
+}
+
+function importPasted(){
+  const raw=document.getElementById('planner-paste').value.trim();
+  if(!raw)return;
+  const lines=raw.split('\n')
+    .map(l=>l.replace(/^[\s\u2022\-\*\d\.\)\:]+/,'').trim())
+    .filter(l=>l.length>2 && !l.match(/^(today|tomorrow|next week|no date|overdue|completed)/i));
+  const highKw=['urgent','asap','critical','review','meeting','deadline','present','sign','approve','escalat'];
+  const lowKw=['read','watch','look into','consider','maybe','check out','idea'];
+  lines.forEach(text=>{
+    const tl=text.toLowerCase();
+    let priority='med';
+    if(highKw.some(k=>tl.includes(k)))priority='high';
+    else if(lowKw.some(k=>tl.includes(k)))priority='low';
+    if(!tasks.find(t=>t.text===text))
+      tasks.push({text,priority,done:false});
+  });
+  saveTasks();
+  document.getElementById('planner-paste').value='';
+  renderTasks();
+  const count=lines.length;
+  const tb=document.getElementById('theme-box');
+  const prev=tb.textContent;
+  tb.textContent=count+' task'+(count===1?'':'s')+' imported successfully.';
+  setTimeout(()=>{ if(tb.textContent.includes('imported')) generateTheme(); },2000);
+}
+
+function clearDone(){
+  tasks=tasks.filter(t=>!t.done);
+  saveTasks();
+  renderTasks();
+}
+
+function toggleTask(i){tasks[i].done=!tasks[i].done;saveTasks();renderTasks();}
+function deleteTask(i){tasks.splice(i,1);saveTasks();renderTasks();}
+function saveTasks(){saveTasksToBin();}
+
+function generateTheme(){
+  const key=localStorage.getItem('sl_apikey');
+  const tt=tasks.filter(t=>!t.done).map(t=>t.text);
+  if(!tt.length)return;
+  if(!key){
+    const h=tasks.filter(t=>t.priority==='high'&&!t.done);
+    document.getElementById('theme-box').textContent=h.length>0?`High-priority focus day — lead with "${h[0].text}".`:`Steady execution day — ${tasks.filter(t=>!t.done).length} tasks to move forward.`;
+    return;
+  }
+  document.getElementById('theme-box').textContent='Generating your day theme...';
+  fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:80,messages:[{role:'user',content:`In one punchy sentence (max 15 words), give a motivational theme for a Head of IT Service Delivery with these tasks: ${tt.join(', ')}. Be direct, energising and professional.`}]})
+  }).then(r=>r.json()).then(d=>{
+    if(d.content&&d.content[0])document.getElementById('theme-box').textContent=d.content[0].text;
+    else if(d.error)document.getElementById('theme-box').textContent='API: '+d.error.message;
+  }).catch(e=>{document.getElementById('theme-box').textContent='Drive each task with the same energy you started this morning with.';console.error('Theme API error:',e);});
+}
+
+async function summariseNewsWithAI(items){
+  const key=localStorage.getItem('sl_apikey');
+  if(!key||!items.length)return null;
+  const headlines=items.slice(0,8).map(n=>`[${CAT_LBL[n.cat]||'Tech'}] ${n.title}`).join('\n');
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:600,
+        messages:[{role:'user',content:`You are briefing a Head of IT Service Delivery. Summarise these IT news headlines into 4-5 bullet points (2 sentences each). Focus on what matters for IT leadership, service delivery, cybersecurity and AI. Be concise and practical.\n\nHeadlines:\n${headlines}\n\nFormat each bullet as: • [Category] Summary sentence. Why it matters sentence.`}]})
+    });
+    const d=await r.json();
+    if(d.content&&d.content[0])return d.content[0].text;
+  }catch(e){console.error('AI summary error:',e);}
+  return null;
+}
+
+const FEEDS=['https://feeds.arstechnica.com/arstechnica/index','https://techcrunch.com/feed','https://www.darkreading.com/rss.xml','https://www.theregister.com/headlines.atom'];
+
+async function fetchFeed(url){
+  const r=await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=8`);
+  const d=await r.json();if(d.status!=='ok')return[];
+  return(d.items||[]).map(i=>({title:i.title||'',link:i.link||'#',summary:(i.description||i.content||'').replace(/<[^>]+>/g,'').slice(0,160).trim()+'...',cat:cat(i.title,i.description||'')}));
+}
+
+async function loadNews(){
+  document.getElementById('news-updated').textContent='Fetching...';
+  document.getElementById('news-items').innerHTML='<div class="news-loading"><span class="spin">&#8635;</span> Fetching latest IT news...</div>';
+  try{
+    const res=await Promise.allSettled(FEEDS.map(fetchFeed));
+    allNews=[];res.forEach(r=>{if(r.status==='fulfilled')allNews.push(...r.value);});
+    if(!allNews.length){document.getElementById('news-items').innerHTML='<div class="news-loading">Could not load feeds. Check connection and refresh.</div>';document.getElementById('news-updated').textContent='Failed';return;}
+    const seen=new Set();allNews=allNews.filter(n=>{if(seen.has(n.title))return false;seen.add(n.title);return true;}).slice(0,30);
+    document.getElementById('news-updated').textContent='Updated '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    renderNews();
+  }catch{document.getElementById('news-items').innerHTML='<div class="news-loading">News feeds unavailable. Try refreshing.</div>';document.getElementById('news-updated').textContent='Error';}
+}
+
+async function renderNews(){
+  const f=currentTab==='all'?allNews:allNews.filter(n=>n.cat===currentTab);
+  if(!f.length){document.getElementById('news-items').innerHTML='<div class="news-loading">No articles in this category right now.</div>';return;}
+  const key=localStorage.getItem('sl_apikey');
+  if(key&&currentTab==='all'){
+    document.getElementById('news-items').innerHTML='<div class="news-loading">AI is summarising the latest news for you...</div>';
+    const aiSummary=await summariseNewsWithAI(f);
+    if(aiSummary){
+      const bullets=aiSummary.split('\n').filter(l=>l.trim().startsWith('•')||l.trim().startsWith('-'));
+      const html=bullets.map(b=>{
+        const clean=b.replace(/^[•\-\s]+/,'');
+        const catMatch=clean.match(/^\[([^\]]+)\]/);
+        const cat=catMatch?catMatch[1]:'';
+        const text=catMatch?clean.slice(catMatch[0].length).trim():clean;
+        return `<div class="news-item"><div class="news-item-tag">${cat}</div><div class="news-item-summary" style="color:var(--text)">${text}</div></div>`;
+      }).join('');
+      document.getElementById('news-items').innerHTML=html||f.slice(0,6).map(n=>`<div class="news-item"><div class="news-item-tag">${CAT_LBL[n.cat]||'General Tech'}</div><div class="news-item-title"><a href="${n.link}" target="_blank">${n.title}</a></div><div class="news-item-summary">${n.summary}</div></div>`).join('');
+      return;
+    }
+  }
+  document.getElementById('news-items').innerHTML=f.slice(0,6).map(n=>`<div class="news-item"><div class="news-item-tag">${CAT_LBL[n.cat]||'General Tech'}</div><div class="news-item-title"><a href="${n.link}" target="_blank">${n.title}</a></div><div class="news-item-summary">${n.summary}</div></div>`).join('');
+}
+
+function switchTab(tab,btn){currentTab=tab;document.querySelectorAll('.news-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderNews();}
+
+function refreshAll(){
+  const btn=document.getElementById('refresh-btn');btn.classList.add('spin');
+  Promise.all([loadNews(),loadAPMNews()]).finally(()=>btn.classList.remove('spin'));
+}
+
+function renderAPM(){
+  const d=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/86400000);
+  const s=(d*4)%APM_FACTS.length;
+  document.getElementById('apm-facts').innerHTML=[0,1,2,3].map(i=>APM_FACTS[(s+i)%APM_FACTS.length]).map(f=>`<div class="apm-fact"><div class="apm-fact-title">${f.title}</div><div class="apm-fact-body">${f.body}</div></div>`).join('');
+  document.getElementById('apm-day-label').textContent='Set '+(d%Math.ceil(APM_FACTS.length/4)+1);
+  loadAPMNews();
+}
+
+async function loadAPMNews(){
+  try{
+    const r=await fetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://www.apm.org.uk/blog/feed/')+'&count=4');
+    const d=await r.json();if(d.status!=='ok'||!d.items)throw 0;
+    document.getElementById('apm-news-items').innerHTML=d.items.slice(0,3).map(i=>`<div class="apm-news-item"><a href="${i.link}" target="_blank">${i.title}</a></div>`).join('');
+  }catch{document.getElementById('apm-news-items').innerHTML='<div class="apm-news-item" style="color:var(--text-dim)">APM news unavailable right now.</div>';}
+}
+
+function openSettings(){document.getElementById('api-key-input').value=localStorage.getItem('sl_apikey')||'';document.getElementById('name-input').value=localStorage.getItem('sl_name')||'';document.getElementById('bin-key-input').value=localStorage.getItem('sl_binkey')||'';document.getElementById('settings-modal').classList.add('open');}
+function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
+function saveSettings(){
+  const k=document.getElementById('api-key-input').value.trim();
+  const n=document.getElementById('name-input').value.trim();
+  const bk=document.getElementById('bin-key-input').value.trim();
+  if(k)localStorage.setItem('sl_apikey',k);else localStorage.removeItem('sl_apikey');
+  if(n)localStorage.setItem('sl_name',n);else localStorage.removeItem('sl_name');
+  if(bk)localStorage.setItem('sl_binkey',bk);else localStorage.removeItem('sl_binkey');
+  closeSettings();setDateTime();
+  loadTasksFromBin();
+  if(k) testAPIKey(k);
+  if(tasks.length>0)generateTheme();
+}
+
+async function testAPIKey(key){
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:20,messages:[{role:'user',content:'Say OK'}]})
+    });
+    const d=await r.json();
+    if(d.content&&d.content[0]){
+      console.log('API key working OK');
+      document.getElementById('news-updated').textContent='API ready ✓';
+      setTimeout(()=>renderNews(),500);
+    } else if(d.error){
+      console.error('API key error:',d.error.message);
+      document.getElementById('news-updated').textContent='API error: '+d.error.type;
+    }
+  }catch(e){
+    console.error('API test failed:',e);
+    document.getElementById('news-updated').textContent='API unreachable';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
